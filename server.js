@@ -90,3 +90,39 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server läuft auf Port " + PORT);
 });
+
+
+/* =========================
+   CREATE GAME (ADMIN)
+========================= */
+app.post("/api/games", async (req, res) => {
+  const { matchday, home_team, away_team, kickoff } = req.body;
+
+  const { data, error } = await supabase.from("games").insert({
+    matchday,
+    home_team,
+    away_team,
+    kickoff
+  });
+
+  if (error) return res.status(400).json(error);
+
+  res.json(data);
+});
+
+/* =========================
+   SET RESULT (ADMIN)
+========================= */
+app.put("/api/games/:id/result", async (req, res) => {
+  const { id } = req.params;
+  const { result_home, result_away } = req.body;
+
+  const { data, error } = await supabase
+    .from("games")
+    .update({ result_home, result_away })
+    .eq("id", id);
+
+  if (error) return res.status(400).json(error);
+
+  res.json(data);
+});
