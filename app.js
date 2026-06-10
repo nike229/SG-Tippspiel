@@ -72,6 +72,10 @@ async function loadGames() {
     <div style="margin-bottom:10px;">
       <b>${g.home_team} vs ${g.away_team}</b><br>
 
+      <button onclick="showEvaluation('${g.id}', this.parentElement)">
+        Auswertung anzeigen
+      </button>
+
       ${isAdmin ? `
         <input placeholder="Ergebnis Heim" id="rh${g.id}">
         <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
@@ -151,4 +155,24 @@ async function setResult(id) {
   });
 
   loadGames();
+}
+
+
+async function showEvaluation(gameId, container) {
+  const res = await fetch(API + "/api/games/" + gameId + "/evaluate");
+  const data = await res.json();
+
+  const winners = data.winners || [];
+
+  const html = `
+    <div style="margin-top:10px; padding:10px; background:#e8f5e9;">
+      <b>🏁 Ergebnis:</b> ${data.game.result_home} : ${data.game.result_away}<br><br>
+      <b>✔ Richtige Tipps:</b><br>
+      ${winners.length > 0
+        ? winners.map(w => `- ${w.username || "Spieler"}`).join("<br>")
+        : "Keine Treffer"}
+    </div>
+  `;
+
+  container.innerHTML += html;
 }
