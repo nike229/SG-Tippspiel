@@ -126,3 +126,36 @@ app.put("/api/games/:id/result", async (req, res) => {
 
   res.json(data);
 });
+
+
+/* =========================
+   AUSWERTUNG PRO SPIEL
+========================= */
+app.get("/api/games/:id/evaluate", async (req, res) => {
+  const { id } = req.params;
+
+  // Spiel holen
+  const { data: game } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  // Tipps holen
+  const { data: tips } = await supabase
+    .from("tips")
+    .select("*")
+    .eq("game_id", id);
+
+  if (!game || !tips) return res.json([]);
+
+  const winners = tips.filter(t =>
+    t.tip_home == game.result_home &&
+    t.tip_away == game.result_away
+  );
+
+  res.json({
+    game,
+    winners
+  });
+});
