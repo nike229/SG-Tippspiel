@@ -1,9 +1,88 @@
 const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
+// Supabase Client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
+const ADMIN_USER = "Admin";
+const ADMIN_PASS = "admin123";
+
+/* =========================
+   HEALTH CHECK
+========================= */
 app.get("/", (req, res) => {
   res.send("Tipprunde Backend läuft 🚀");
+});
+
+/* =========================
+   REGISTER
+========================= */
+app.post("/api/auth/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  const hash = await bcrypt.hash(password, 10);
+
+  const { error } = await supabase.from("users").insert({
+    username,
+    password_hash: hash,
+    role: "player"
+  });
+
+  if (error) return res.status(400).json(error);
+
+  res.json({ success: true });
+});
+
+/* =========================
+   LOGIN
+========================= */
+app.post("/api/auth/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  // Admin Login
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = jwt.sign(
+      { id: "admin", role: "admin", username: "Admin" },
+      process.env.JWT_SECRET
+    );
+    return res.json({ token });
+  }
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .single();
+
+  if (!user) return res.status(401).json({ error: "User not found" });
+
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) return res.status(401).json({ error: "Wrong password" });
+
+  const token = jwt.sign(
+    { id: user.id, role: user.role, username: user.username },
+    process.env.JWT_SECRET
+  );
+
+  res.json({ token });
+});
+
+/* =========================
+   GET USERS (ADMIN TEST)
+========================= */
+app.get("/api/users", async (req, res) => {
+  const { data } = await supabase.from("users").select("*");
+  res.json(data);
 });
 
 const PORT = process.env.PORT || 3000;
