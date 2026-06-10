@@ -2,6 +2,17 @@ const API = "https://sg-tippspiel.onrender.com";
 
 let token = localStorage.getItem("token");
 
+let isAdmin = false;
+
+function decodeUser(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    isAdmin = payload.username === "Admin";
+  } catch (e) {
+    isAdmin = false;
+  }
+}
+
 async function login() {
   const username = document.getElementById("user").value;
   const password = document.getElementById("pass").value;
@@ -17,6 +28,7 @@ async function login() {
   if (data.token) {
     token = data.token;
     localStorage.setItem("token", token);
+    decodeUser(token);
     loadGames();
   } else {
     alert("Login fehlgeschlagen");
@@ -43,17 +55,36 @@ async function loadGames() {
 
   const games = await res.json();
 
-  document.getElementById("app").innerHTML = `
-    <h2>Spiele</h2>
-    ${games.map(g => `
-      <div>
-        <b>${g.home_team} vs ${g.away_team}</b><br>
+  let html = `<h2>Spiele</h2>`;
+
+  if (isAdmin) {
+    html += `
+      <h3>➕ Spiel erstellen</h3>
+      <input id="home" placeholder="Heimteam">
+      <input id="away" placeholder="Auswärtsteam">
+      <input id="kickoff" placeholder="Kickoff (YYYY-MM-DD)">
+      <button onclick="createGame()">Erstellen</button>
+      <hr>
+    `;
+  }
+
+  html += games.map(g => `
+    <div style="margin-bottom:10px;">
+      <b>${g.home_team} vs ${g.away_team}</b><br>
+
+      ${isAdmin ? `
+        <input placeholder="Ergebnis Heim" id="rh${g.id}">
+        <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
+        <button onclick="setResult('${g.id}')">Ergebnis speichern</button>
+      ` : `
         <input placeholder="Tore Heim">
         <input placeholder="Tore Auswärts">
         <button onclick="tip('${g.id}', this)">Tippen</button>
-      </div>
-    `).join("")}
-  `;
+      `}
+    </div>
+  `).join("");
+
+  document.getElementById("app").innerHTML = html;
 }
 
 async function tip(gameId, btn) {
@@ -84,5 +115,40 @@ document.getElementById("app").innerHTML = `
 `;
 
 if (token) {
+  loadGames();
+}
+
+
+async function createGame() {
+  await fetch(API + "/api/games", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({
+      home_team: document.getElementById("home").value,
+      away_team: document.getElementById("away").value,
+      kickoff: document.getElementById("kickoff").value,
+      matchday: 1
+    })
+  });
+
+  loadGames();
+}
+
+async function setResult(id) {
+  const result_home = document.getElementById("rh" + id).value;
+  const result_away = document.getElementById("ra" + id).value;
+
+  await fetch(API + "/api/games/" + id + "/result", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ result_home, result_away })
+  });
+
   loadGames();
 }
