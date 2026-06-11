@@ -115,8 +115,8 @@ tips.forEach(t => {
           </div>
         ` : `
           <div>
-            <input placeholder="Tore Heim" id="t${g.id}_h" value="${myTip?.tip_home ?? ''}">
-            <input placeholder="Tore Auswärts" id="t${g.id}_a" value="${myTip?.tip_away ?? ''}">
+            <input placeholder="Tore Heim" id="t${g.id}_h" value="${myTips?.tip_home ?? ''}">
+            <input placeholder="Tore Auswärts" id="t${g.id}_a" value="${myTips?.tip_away ?? ''}">
             <button onclick="tip('${g.id}', this)">Speichern</button>
           </div>
         `}
