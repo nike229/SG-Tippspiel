@@ -52,6 +52,16 @@ async function register() {
   alert("Registriert! Jetzt einloggen.");
 }
 
+function renderLogin() {
+  document.getElementById("app").innerHTML = `
+    <h2>Login</h2>
+    <input id="user" placeholder="Username"><br>
+    <input id="pass" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Registrieren</button>
+  `;
+}
+
 async function loadGames() {
   const res = await fetch(API + "/api/games", {
     headers: { Authorization: "Bearer " + token }
@@ -187,3 +197,14 @@ async function showEvaluation(gameId, container) {
 
   container.innerHTML += html;
 }
+
+window.onload = () => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    decodeUser(token);
+    loadGames();
+  } else {
+    renderLogin();
+  }
+};
