@@ -121,15 +121,18 @@ tips.forEach(t => {
           </div>
         `}
 
-${myTips.length ? `
-  <div style="margin-top:5px; color:green;">
+      ${myTips.length ? `
+  <div style="color:green;">
     ✔ Deine Tipps:<br>
-    ${myTips.map(t => `- ${t.tip_home} : ${t.tip_away}`).join("<br>")}
+    ${myTips.map(t => `
+      <div>
+        - ${t.tip_home} : ${t.tip_away}
+        <button onclick="deleteTip('${t.id}')" style="margin-left:10px;">🗑️</button>
+      </div>
+    `).join("")}
   </div>
 ` : `
-  <div style="margin-top:5px; color:#999;">
-    Noch kein Tipp abgegeben
-  </div>
+  <div style="color:#999;">Noch kein Tipp abgegeben</div>
 `}
       </div>
     `;
@@ -259,3 +262,21 @@ window.onload = () => {
     renderLogin();
   }
 };
+
+async function deleteTip(tipId) {
+  const res = await fetch(API + "/api/tips/" + tipId, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler beim Löschen");
+    return;
+  }
+
+  loadGames();
+}
