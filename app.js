@@ -63,17 +63,27 @@ function renderLogin() {
 }
 
 async function loadGames() {
-  const res = await fetch(API + "/api/games", {
-    headers: { Authorization: "Bearer " + token }
+  const [gamesRes, tipsRes] = await Promise.all([
+    fetch(API + "/api/games", {
+      headers: { Authorization: "Bearer " + token }
+    }),
+    fetch(API + "/api/my-tips", {
+      headers: { Authorization: "Bearer " + token }
+    })
+  ]);
+
+  const games = await gamesRes.json();
+  const tips = await tipsRes.json();
+
+  const tipMap = {};
+  tips.forEach(t => {
+    tipMap[t.game_id] = t;
   });
 
-  const games = await res.json();
-
-let html = `
-  <h2>Spiele</h2>
-  <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
-  <button onclick="loadMyTips()">Meine Tipps anzeigen</button>
-`;
+  let html = `
+    <h2>Spiele</h2>
+    <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
+  `;
 
   if (isAdmin) {
     html += `
@@ -86,37 +96,48 @@ let html = `
     `;
   }
 
-  html += games.map(g => `
-    <div style="margin-bottom:10px;">
-      <b>${g.home_team} vs ${g.away_team}</b><br>
+  html += games.map(g => {
+    const myTip = tipMap[g.id];
 
-      <button onclick="showEvaluation('${g.id}', this.parentElement)">
-        Auswertung anzeigen
-      </button>
+    return `
+      <div style="margin-bottom:12px; padding:10px; border:1px solid #ddd;">
+        <b>${g.home_team} vs ${g.away_team}</b><br>
 
-      ${isAdmin ? `
-        <input placeholder="Ergebnis Heim" id="rh${g.id}">
-        <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
-        <button onclick="setResult('${g.id}')">Ergebnis speichern</button>
-      ` : `
-        <input placeholder="Tore Heim">
-        <input placeholder="Tore Auswärts">
-        <button onclick="tip('${g.id}', this)">Tippen</button>
-      `}
-    </div>
-  `).join("");
+        ${isAdmin ? `
+          <div>
+            <input placeholder="Ergebnis Heim" id="rh${g.id}">
+            <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
+            <button onclick="setResult('${g.id}')">Ergebnis speichern</button>
+          </div>
+        ` : `
+          <div>
+            <input placeholder="Tore Heim" id="t${g.id}_h" value="${myTip?.tip_home ?? ''}">
+            <input placeholder="Tore Auswärts" id="t${g.id}_a" value="${myTip?.tip_away ?? ''}">
+            <button onclick="tip('${g.id}', this)">Speichern</button>
+          </div>
+        `}
+
+        ${myTip ? `
+          <div style="margin-top:5px; color:green;">
+            ✔ Dein Tipp: ${myTip.tip_home} : ${myTip.tip_away}
+          </div>
+        ` : `
+          <div style="margin-top:5px; color:#999;">
+            Noch kein Tipp abgegeben
+          </div>
+        `}
+      </div>
+    `;
+  }).join("");
 
   document.getElementById("app").innerHTML = html;
 }
 
 async function tip(gameId, btn) {
-  const parent = btn.parentElement;
-  const inputs = parent.querySelectorAll("input");
+  const home = document.getElementById(`t${gameId}_h`).value;
+  const away = document.getElementById(`t${gameId}_a`).value;
 
-  const tip_home = Number(inputs[0].value);
-  const tip_away = Number(inputs[1].value);
-
-  if (inputs[0].value === "" || inputs[1].value === "") {
+  if (home === "" || away === "") {
     alert("Bitte beide Ergebnisse eingeben");
     return;
   }
@@ -128,20 +149,18 @@ async function tip(gameId, btn) {
       Authorization: "Bearer " + token
     },
     body: JSON.stringify({
-      tip_home,
-      tip_away
+      tip_home: Number(home),
+      tip_away: Number(away)
     })
   });
 
   const data = await res.json();
 
   if (!res.ok) {
-    console.log("TIP ERROR:", data);
-    alert("Fehler beim Speichern");
+    alert(data.error || "Fehler beim Speichern");
     return;
   }
 
-  alert("Tipp gespeichert ✅");
   loadGames();
 }
 
