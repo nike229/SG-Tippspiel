@@ -75,10 +75,14 @@ async function loadGames() {
   const games = await gamesRes.json();
   const tips = await tipsRes.json();
 
-  const tipMap = {};
-  tips.forEach(t => {
-    tipMap[t.game_id] = t;
-  });
+const tipMap = {};
+
+tips.forEach(t => {
+  if (!tipMap[t.game_id]) {
+    tipMap[t.game_id] = [];
+  }
+  tipMap[t.game_id].push(t);
+});
 
   let html = `
     <h2>Spiele</h2>
@@ -97,7 +101,7 @@ async function loadGames() {
   }
 
   html += games.map(g => {
-    const myTip = tipMap[g.id];
+    const myTips = tipMap[g.id] || [];
 
     return `
       <div style="margin-bottom:12px; padding:10px; border:1px solid #ddd;">
@@ -117,15 +121,16 @@ async function loadGames() {
           </div>
         `}
 
-        ${myTip ? `
-          <div style="margin-top:5px; color:green;">
-            ✔ Dein Tipp: ${myTip.tip_home} : ${myTip.tip_away}
-          </div>
-        ` : `
-          <div style="margin-top:5px; color:#999;">
-            Noch kein Tipp abgegeben
-          </div>
-        `}
+${myTips.length ? `
+  <div style="margin-top:5px; color:green;">
+    ✔ Deine Tipps:<br>
+    ${myTips.map(t => `- ${t.tip_home} : ${t.tip_away}`).join("<br>")}
+  </div>
+` : `
+  <div style="margin-top:5px; color:#999;">
+    Noch kein Tipp abgegeben
+  </div>
+`}
       </div>
     `;
   }).join("");
@@ -157,7 +162,8 @@ async function tip(gameId, btn) {
   const data = await res.json();
 
   if (!res.ok) {
-    alert(data.error || "Fehler beim Speichern");
+    alert(data.error || JSON.stringify(data));
+    console.log("TIP ERROR DETAIL:", data);
     return;
   }
 
