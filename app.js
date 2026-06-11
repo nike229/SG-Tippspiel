@@ -72,6 +72,7 @@ async function loadGames() {
 let html = `
   <h2>Spiele</h2>
   <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
+  <button onclick="loadMyTips()">Meine Tipps anzeigen</button>
 `;
 
   if (isAdmin) {
@@ -196,6 +197,31 @@ async function showEvaluation(gameId, container) {
   `;
 
   container.innerHTML += html;
+}
+
+async function loadMyTips() {
+  const res = await fetch(API + "/api/my-tips", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const tips = await res.json();
+
+  let html = `<h2>📊 Meine Tipps</h2>`;
+
+  if (!tips.length) {
+    html += `<p>Noch keine Tipps abgegeben.</p>`;
+  } else {
+    html += tips.map(t => `
+      <div style="margin-bottom:10px; padding:8px; border:1px solid #ccc;">
+        Spiel: ${t.game_id}<br>
+        Tipp: ${t.tip_home} : ${t.tip_away}
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("app").innerHTML += html;
 }
 
 window.onload = () => {
