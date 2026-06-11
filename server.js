@@ -151,62 +151,52 @@ app.post("/api/tips/:gameId", async (req, res) => {
   const { gameId } = req.params;
   const { tip_home, tip_away } = req.body;
 
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ error: "No token provided" });
   }
 
   let user;
-
   try {
     user = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (err) {
+  } catch (e) {
     return res.status(401).json({ error: "Invalid token" });
   }
 
   const user_id = user.id;
 
-  // 1. Settings holen (maxTipsPerGame)
-  const { data: settings } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "maxTipsPerGame")
+  // 1. Spiel holen (Kickoff prüfen)
+  const { data: game, error: gameError } = await supabase
+    .from("games")
+    .select("kickoff")
+    .eq("id", gameId)
     .single();
 
-  const maxTips = settings ? Number(settings.value) : 1;
-
-  // 2. bereits abgegebene Tipps zählen
-  const { data: existingTips, error: countError } = await supabase
-    .from("tips")
-    .select("id", { count: "exact" })
-    .eq("user_id", user_id)
-    .eq("game_id", gameId);
-
-  if (countError) {
-    return res.status(400).json(countError);
+  if (gameError || !game) {
+    return res.status(400).json({ error: "Game not found" });
   }
 
-  const currentCount = existingTips ? existingTips.length : 0;
+  const kickoffTime = new Date(game.kickoff).getTime();
+  const now = Date.now();
 
-  // 3. Limit prüfen
-  if (currentCount >= maxTips) {
+  // 2. Deadline: 1h vorher
+  if (now > kickoffTime - 60 * 60 * 1000) {
     return res.status(403).json({
-      error: `Maximale Anzahl an Tipps (${maxTips}) für dieses Spiel erreicht`
+      error: "Tippabgabe nur bis 1 Stunde vor Spielbeginn möglich"
     });
   }
 
-  // 4. Tipp speichern
+  // 3. Insert Tipp
   const { data, error } = await supabase.from("tips").insert({
-    user_id: user_id,
+    user_id,
     game_id: gameId,
     tip_home: Number(tip_home),
     tip_away: Number(tip_away)
   });
 
   if (error) {
-    console.log("TIP INSERT ERROR:", error);
+    console.log(error);
     return res.status(400).json(error);
   }
 
@@ -276,4 +266,35 @@ app.get("/api/my-tips", async (req, res) => {
   }
 
   res.json(data);
+});
+
+/* =========================
+   TIPPS LÖSCHEN
+========================= */
+
+app.delete("/api/tips/:tipId", async (req, res) => {
+  const { tipId } = req.params;
+
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const { data, error } = await supabase
+    .from("tips")
+    .delete()
+    .eq("id", tipId);
+
+  if (error) {
+    return res.status(400).json(error);
+  }
+
+  res.json({ success: true });
 });
