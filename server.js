@@ -244,3 +244,36 @@ app.get("/api/games/:id/evaluate", async (req, res) => {
     winners
   });
 });
+
+/* =========================
+   ANZEIGE DER TIPPS
+========================= */
+app.get("/api/my-tips", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  let user;
+
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const user_id = user.id;
+
+  const { data, error } = await supabase
+    .from("tips")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (error) {
+    return res.status(400).json(error);
+  }
+
+  res.json(data);
+});
