@@ -144,6 +144,49 @@ app.get("/api/games", async (req, res) => {
 });
 
 /* =========================
+   TIPP ABGEBEN UND SPEICHERN
+========================= */
+
+app.post("/api/tips/:gameId", async (req, res) => {
+  const { gameId } = req.params;
+  const { tip_home, tip_away } = req.body;
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  let user;
+
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const user_id = user.id;
+
+  const { data, error } = await supabase.from("tips").insert({
+    user_id: user_id,
+    game_id: gameId,
+    tip_home: Number(tip_home),
+    tip_away: Number(tip_away)
+  });
+
+  if (error) {
+    console.log("TIP INSERT ERROR:", error);
+    return res.status(400).json(error);
+  }
+
+  res.json({
+    success: true,
+    data
+  });
+});
+
+/* =========================
    AUSWERTUNG PRO SPIEL
 ========================= */
 app.get("/api/games/:id/evaluate", async (req, res) => {
