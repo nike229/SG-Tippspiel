@@ -102,33 +102,37 @@ async function tip(gameId, btn) {
   const parent = btn.parentElement;
   const inputs = parent.querySelectorAll("input");
 
-  const tip_home = inputs[0].value;
-  const tip_away = inputs[1].value;
+  const tip_home = Number(inputs[0].value);
+  const tip_away = Number(inputs[1].value);
 
-  await fetch(API + "/api/tips/" + gameId, {
+  if (inputs[0].value === "" || inputs[1].value === "") {
+    alert("Bitte beide Ergebnisse eingeben");
+    return;
+  }
+
+  const res = await fetch(API + "/api/tips/" + gameId, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + token
     },
-    body: JSON.stringify({ tip_home, tip_away })
+    body: JSON.stringify({
+      tip_home,
+      tip_away
+    })
   });
 
-  alert("Tipp gespeichert");
-}
+  const data = await res.json();
 
-document.getElementById("app").innerHTML = `
-  <h2>Login</h2>
-  <input id="user" placeholder="Username"><br>
-  <input id="pass" type="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
-  <button onclick="register()">Registrieren</button>
-`;
+  if (!res.ok) {
+    console.log("TIP ERROR:", data);
+    alert("Fehler beim Speichern");
+    return;
+  }
 
-if (token) {
+  alert("Tipp gespeichert ✅");
   loadGames();
 }
-
 
 async function createGame() {
   await fetch(API + "/api/games", {
