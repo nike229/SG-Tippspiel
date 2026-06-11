@@ -127,6 +127,21 @@ app.put("/api/games/:id/result", async (req, res) => {
   res.json(data);
 });
 
+/* =========================
+   ALLE SPIELE ABRUFEN
+========================= */
+app.get("/api/games", async (req, res) => {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .order("kickoff", { ascending: true });
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data);
+});
 
 /* =========================
    AUSWERTUNG PRO SPIEL
