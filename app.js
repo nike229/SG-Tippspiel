@@ -4,12 +4,16 @@ let token = localStorage.getItem("token");
 
 let isAdmin = false;
 
+let currentUser = null;
+
 function decodeUser(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     isAdmin = payload.username === "Admin";
+    currentUser = payload.username;
   } catch (e) {
     isAdmin = false;
+    currentUser = null;
   }
 }
 
@@ -55,7 +59,10 @@ async function loadGames() {
 
   const games = await res.json();
 
-  let html = `<h2>Spiele</h2>`;
+let html = `
+  <h2>Spiele</h2>
+  <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
+`;
 
   if (isAdmin) {
     html += `
