@@ -168,6 +168,36 @@ app.post("/api/tips/:gameId", async (req, res) => {
 
   const user_id = user.id;
 
+  // 1. Settings holen (maxTipsPerGame)
+  const { data: settings } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "maxTipsPerGame")
+    .single();
+
+  const maxTips = settings ? Number(settings.value) : 1;
+
+  // 2. bereits abgegebene Tipps zählen
+  const { data: existingTips, error: countError } = await supabase
+    .from("tips")
+    .select("id", { count: "exact" })
+    .eq("user_id", user_id)
+    .eq("game_id", gameId);
+
+  if (countError) {
+    return res.status(400).json(countError);
+  }
+
+  const currentCount = existingTips ? existingTips.length : 0;
+
+  // 3. Limit prüfen
+  if (currentCount >= maxTips) {
+    return res.status(403).json({
+      error: `Maximale Anzahl an Tipps (${maxTips}) für dieses Spiel erreicht`
+    });
+  }
+
+  // 4. Tipp speichern
   const { data, error } = await supabase.from("tips").insert({
     user_id: user_id,
     game_id: gameId,
@@ -180,10 +210,7 @@ app.post("/api/tips/:gameId", async (req, res) => {
     return res.status(400).json(error);
   }
 
-  res.json({
-    success: true,
-    data
-  });
+  res.json({ success: true, data });
 });
 
 /* =========================
