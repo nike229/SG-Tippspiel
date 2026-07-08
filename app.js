@@ -118,12 +118,31 @@ if (isAdmin) {
             <input placeholder="Ergebnis Heim" id="rh${g.id}">
             <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
             <button onclick="setResult('${g.id}')">Ergebnis speichern</button>
+            <button 
+              onclick="toggleLock('${g.id}', ${g.locked})"
+              style="margin-left:8px; background:${g.locked ? '#4caf50' : '#f44336'}; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">
+              ${g.locked ? '🔓 Entsperren' : '🔒 Sperren'}
+            </button>
           </div>
-        ` : `
+          ${g.locked ? '<span style="color:#f44336; font-size:12px;">⛔ Tipps gesperrt</span>' : ''}
+          ` : `
           <div>
-            <input placeholder="Tore Heim" id="t${g.id}_h" value="${myTips?.tip_home ?? ''}">
-            <input placeholder="Tore Auswärts" id="t${g.id}_a" value="${myTips?.tip_away ?? ''}">
-            <button onclick="tip('${g.id}', this)">Speichern</button>
+            <input 
+              placeholder="Tore Heim" 
+              id="t${g.id}_h" 
+              value="${myTips.length ? myTips[0].tip_home : ''}"
+              ${g.locked ? 'disabled style="background:#f0f0f0; color:#999;"' : ''}
+            >
+            <input 
+              placeholder="Tore Auswärts" 
+              id="t${g.id}_a" 
+              value="${myTips.length ? myTips[0].tip_away : ''}"
+              ${g.locked ? 'disabled style="background:#f0f0f0; color:#999;"' : ''}
+            >
+            ${g.locked 
+              ? '<p style="color:#f44336; font-size:13px;">⛔ Tippabgabe gesperrt</p>' 
+              : `<button onclick="tip('${g.id}', this)">Speichern</button>`
+            }
           </div>
         `}
 
@@ -340,4 +359,24 @@ async function resetPassword(userId) {
 
   alert("✅ Passwort wurde zurückgesetzt");
   document.getElementById("pw-" + userId).value = "";
+}
+
+async function toggleLock(gameId, currentlyLocked) {
+  const res = await fetch(API + "/api/games/" + gameId + "/lock", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ locked: !currentlyLocked })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler beim Sperren");
+    return;
+  }
+
+  loadGames();
 }
