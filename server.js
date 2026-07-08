@@ -423,6 +423,98 @@ app.put("/api/games/:id/lock", async (req, res) => {
   res.json({ success: true });
 });
 
+/* =========================
+   SPIEL AUSWERTEN (ADMIN)
+========================= */
+app.put("/api/games/:id/evaluate", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  let user;
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  if (user.role !== "admin") {
+    return res.status(403).json({ error: "Nur Admin erlaubt" });
+  }
+
+  const { id } = req.params;
+
+  const { data: game, error: gameError } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (gameError || !game) return res.status(400).json({ error: "Spiel nicht gefunden" });
+
+  const { data: tips, error: tipsError } = await supabase
+    .from("tips")
+    .select("*, users(username)")
+    .eq("game_id", id);
+
+  if (tipsError) return res.status(400).json(tipsError);
+
+  const winners = tips.filter(t =>
+    t.tip_home == game.result_home &&
+    t.tip_away == game.result_away
+  ).map(t => t.users?.username || "Unbekannt");
+
+  const { error: updateError } = await supabase
+    .from("games")
+    .update({
+      evaluated: true,
+      winners: winners
+    })
+    .eq("id", id);
+
+  if (updateError) return res.status(400).json(updateError);
+
+  res.json({ success: true, winners });
+});
+
+/* =========================
+   SPIEL LÖSCHEN (ADMIN)
+========================= */
+app.delete("/api/games/:id", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  let user;
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  if (user.role !== "admin") {
+    return res.status(403).json({ error: "Nur Admin erlaubt" });
+  }
+
+  const { id } = req.params;
+
+  const { error: tipsError } = await supabase
+    .from("tips")
+    .delete()
+    .eq("game_id", id);
+
+  if (tipsError) return res.status(400).json(tipsError);
+
+  const { error: gameError } = await supabase
+    .from("games")
+    .delete()
+    .eq("id", id);
+
+  if (gameError) return res.status(400).json(gameError);
+
+  res.json({ success: true });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
