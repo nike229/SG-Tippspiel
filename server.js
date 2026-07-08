@@ -85,13 +85,6 @@ app.get("/api/users", async (req, res) => {
   res.json(data);
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Server läuft auf Port " + PORT);
-});
-
-
 /* =========================
    CREATE GAME (ADMIN)
 ========================= */
@@ -344,4 +337,10 @@ app.delete("/api/tips/:tipId", async (req, res) => {
   }
 
   res.json({ success: true });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server läuft auf Port " + PORT);
 });
