@@ -122,19 +122,30 @@ if (isAdmin) {
       <div style="margin-bottom:12px; padding:10px; border:1px solid #ddd;">
         <b>${g.home_team} vs ${g.away_team}</b><br>
 
-        ${isAdmin ? `
-          <div>
-            <input placeholder="Ergebnis Heim" id="rh${g.id}">
-            <input placeholder="Ergebnis Auswärts" id="ra${g.id}">
-            <button onclick="setResult('${g.id}')">Ergebnis speichern</button>
-            <button 
-              onclick="toggleLock('${g.id}', ${g.locked})"
-              style="margin-left:8px; background:${g.locked ? '#4caf50' : '#f44336'}; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">
-              ${g.locked ? '🔓 Entsperren' : '🔒 Sperren'}
-            </button>
-          </div>
-          ${g.locked ? '<span style="color:#f44336; font-size:12px;">⛔ Tipps gesperrt</span>' : ''}
-          ` : `
+    ${isAdmin ? `
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;">
+        <input placeholder="Ergebnis Heim" id="rh${g.id}" style="width:120px;">
+        <input placeholder="Ergebnis Auswärts" id="ra${g.id}" style="width:120px;">
+        <button onclick="setResult('${g.id}')">💾 Ergebnis speichern</button>
+        <button 
+          onclick="toggleLock('${g.id}', ${g.locked})"
+          style="background:${g.locked ? '#4caf50' : '#f44336'}; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">
+          ${g.locked ? '🔓 Entsperren' : '🔒 Sperren'}
+        </button>
+        <button
+          onclick="evaluateGame('${g.id}')"
+          style="background:#ff9800; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">
+          🏆 Auswerten
+        </button>
+        <button
+          onclick="deleteGame('${g.id}')"
+          style="background:#9e9e9e; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">
+          🗑️ Spiel löschen
+        </button>
+      </div>
+      ${g.locked ? '<span style="color:#f44336; font-size:12px;">⛔ Tipps gesperrt</span>' : ''}
+      ${g.evaluated ? '<span style="color:#ff9800; font-size:12px; margin-left:8px;">✅ Bereits ausgewertet</span>' : ''}
+    ` : `
           <div>
             <input 
               placeholder="Tore Heim" 
@@ -155,19 +166,27 @@ if (isAdmin) {
           </div>
         `}
 
-      ${myTips.length ? `
-  <div style="color:green;">
-    ✔ Deine Tipps:<br>
-    ${myTips.map(t => `
-      <div>
-        - ${t.tip_home} : ${t.tip_away}
-        <button onclick="deleteTip('${t.id}')" style="margin-left:10px;">🗑️</button>
-      </div>
-    `).join("")}
-  </div>
-` : `
-  <div style="color:#999;">Noch kein Tipp abgegeben</div>
-`}
+        ${g.evaluated ? `
+          <div style="margin-top:10px; padding:10px; background:#fff8e1; border-radius:4px; border-left:4px solid #ff9800;">
+            <b>🏆 Gewinner:</b><br>
+            ${g.winners && g.winners.length > 0
+              ? g.winners.map(w => `<span style="color:#ff9800;">🥇 ${w}</span>`).join("<br>")
+              : '<span style="color:#999;">Keine richtigen Tipps</span>'
+            }
+          </div>
+        ` : myTips.length ? `
+          <div style="color:green;">
+            ✔ Deine Tipps:<br>
+            ${myTips.map(t => `
+              <div>
+                - ${t.tip_home} : ${t.tip_away}
+                <button onclick="deleteTip('${t.id}')" style="margin-left:10px;">🗑️</button>
+              </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div style="color:#999;">Noch kein Tipp abgegeben</div>
+        `}
       </div>
     `;
   }).join("");
@@ -396,4 +415,43 @@ function logout() {
   isAdmin = false;
   currentUser = null;
   renderLogin();
+}
+
+async function evaluateGame(gameId) {
+  const res = await fetch(API + "/api/games/" + gameId + "/evaluate", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler bei der Auswertung");
+    return;
+  }
+
+  loadGames();
+}
+
+async function deleteGame(gameId) {
+  if (!confirm("Spiel wirklich löschen? Alle Tipps werden ebenfalls gelöscht.")) return;
+
+  const res = await fetch(API + "/api/games/" + gameId, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler beim Löschen");
+    return;
+  }
+
+  loadGames();
 }
