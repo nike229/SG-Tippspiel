@@ -120,7 +120,14 @@ if (isAdmin) {
 
     return `
       <div style="margin-bottom:12px; padding:10px; border:1px solid #ddd;">
-        <b>${g.home_team} vs ${g.away_team}</b><br>
+        <b>${g.home_team} vs ${g.away_team}</b>
+        ${g.result_home !== null && g.result_away !== null
+        ? `<span style="margin-left:10px; background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:4px; font-size:14px;">
+            ✅ Ergebnis: ${g.result_home} : ${g.result_away}
+            </span>`
+            : `<span style="margin-left:10px; color:#999; font-size:13px;">Kein Ergebnis eingetragen</span>`
+        }
+        <br>
 
     ${isAdmin ? `
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;">
