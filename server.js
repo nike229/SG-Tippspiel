@@ -159,6 +159,10 @@ app.post("/api/tips/:gameId", async (req, res) => {
     return res.status(401).json({ error: "Invalid token" });
   }
 
+  if (user.role === "admin") {
+    return res.status(403).json({ error: "Admin kann nicht tippen" });
+  }
+  
   const user_id = user.id;
 
   // =========================
@@ -295,6 +299,11 @@ app.get("/api/my-tips", async (req, res) => {
     return res.status(401).json({ error: "Invalid token" });
   }
 
+    // Admin hat keine Tipps in der DB
+  if (user.role === "admin") {
+    return res.json([]);
+  }
+  
   const user_id = user.id;
 
   const { data, error } = await supabase
