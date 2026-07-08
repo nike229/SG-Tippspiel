@@ -1,21 +1,326 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #f4f4f4;
+  color: #222;
+  font-size: 16px;
+}
+
+h1 {
+  background: #1a73e8;
+  color: white;
+  padding: 16px;
+  font-size: 20px;
   text-align: center;
 }
 
-#app {
-  margin-top: 30px;
+h2 {
+  font-size: 18px;
+  margin-bottom: 4px;
 }
 
-input, button {
-  padding: 10px;
-  margin: 5px;
+h3 {
+  font-size: 16px;
+  margin: 16px 0 8px 0;
+  color: #444;
 }
+
+#app {
+  max-width: 600px;
+  margin: 16px auto;
+  padding: 0 12px;
+}
+
+/* =========================
+   INPUTS
+========================= */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input {
+  width: 100%;
+  padding: 12px 10px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  background: white;
+}
+
+input:disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px white inset;
   box-shadow: 0 0 0px 1000px white inset;
   -webkit-text-fill-color: #000;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+button {
+  min-height: 44px;
+  padding: 10px 16px;
+  margin: 4px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  background: #1a73e8;
+  color: white;
+  width: 100%;
+}
+
+button:active {
+  opacity: 0.85;
+}
+
+/* =========================
+   SPIELKARTEN
+========================= */
+.game-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.game-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.game-result {
+  display: inline-block;
+  margin-left: 8px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.game-no-result {
+  color: #999;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+/* =========================
+   ADMIN BUTTON-GRUPPE
+========================= */
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.admin-actions button {
+  width: auto;
+  flex: 1 1 calc(50% - 8px);
+  min-width: 130px;
+  font-size: 13px;
+  min-height: 44px;
+}
+
+.admin-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-inputs input {
+  flex: 1;
+  width: auto;
+}
+
+/* =========================
+   TIPP-BEREICH
+========================= */
+.tip-area {
+  margin-top: 10px;
+}
+
+.tip-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tip-inputs input {
+  flex: 1;
+  width: auto;
+  text-align: center;
+}
+
+.tip-inputs span {
+  font-weight: bold;
+  font-size: 18px;
+  color: #555;
+}
+
+.tip-save-btn {
+  background: #1a73e8;
+}
+
+.tip-locked {
+  color: #f44336;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* =========================
+   TIPPS LISTE
+========================= */
+.tips-list {
+  color: green;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.tips-list div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tips-list button {
+  width: auto;
+  min-height: 36px;
+  padding: 4px 10px;
+  background: #f44336;
+  font-size: 13px;
+}
+
+/* =========================
+   GEWINNER-BOX
+========================= */
+.winners-box {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff8e1;
+  border-radius: 4px;
+  border-left: 4px solid #ff9800;
+  font-size: 14px;
+}
+
+/* =========================
+   USER-LISTE (ADMIN)
+========================= */
+.user-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.user-row span {
+  font-weight: bold;
+  min-width: 100px;
+  flex: 1;
+}
+
+.user-row input {
+  flex: 2;
+  min-width: 140px;
+  margin: 0;
+}
+
+.user-row button {
+  width: auto;
+  flex: 0 0 auto;
+  background: #ff9800;
+  font-size: 13px;
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
+/* =========================
+   LOGIN
+========================= */
+.login-box {
+  background: white;
+  border-radius: 8px;
+  padding: 24px 16px;
+  margin-top: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.login-box h2 {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.login-box button {
+  background: #1a73e8;
+  margin-top: 8px;
+}
+
+/* =========================
+   HEADER / LOGOUT
+========================= */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.top-bar button {
+  width: auto;
+  background: #f44336;
+  padding: 8px 14px;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+/* =========================
+   STATUS-BADGES
+========================= */
+.badge-locked {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.badge-evaluated {
+  color: #ff9800;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* =========================
+   SPIEL ERSTELLEN (ADMIN)
+========================= */
+.create-game-box {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  text-align: left;
 }
