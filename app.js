@@ -137,6 +137,10 @@ html += games.map(g => {
         style="background:#ff9800;">
         🏆 Auswerten
       </button>
+      <button onclick="showTipsOverview('${g.id}')"
+        style="background:#1a73e8;">
+        📋 Tippübersicht
+      </button>
       <button onclick="deleteGame('${g.id}')"
         style="background:#9e9e9e;">
         🗑️ Spiel löschen
@@ -458,4 +462,89 @@ async function deleteGame(gameId) {
   }
 
   loadGames();
+}
+
+async function showTipsOverview(gameId) {
+  const res = await fetch(API + "/api/games/" + gameId + "/tips-overview", {
+    headers: { Authorization: "Bearer " + token }
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler beim Laden der Tippübersicht");
+    return;
+  }
+
+  const { game, grouped, maxTips } = data;
+
+  // Spaltenheader für Tipps
+  const tipHeaders = Array.from({ length: maxTips }, (_, i) =>
+    `<th>Tipp ${i + 1}</th>`
+  ).join("");
+
+  const users = Object.keys(grouped);
+
+  const rows = users.length > 0 ? users.map(username => {
+    const userTips = grouped[username];
+    const tipCells = Array.from({ length: maxTips }, (_, i) => {
+      const t = userTips[i];
+      return t
+        ? `<td>${t.tip_home} : ${t.tip_away}</td>`
+        : `<td style="color:#ccc;">–</td>`;
+    }).join("");
+
+    return `
+      <tr>
+        <td><b>${username}</b></td>
+        <td>${game.home_team} vs ${game.away_team}</td>
+        ${tipCells}
+      </tr>
+    `;
+  }).join("") : `
+    <tr>
+      <td colspan="${maxTips + 2}" style="text-align:center; color:#999; padding:16px;">
+        Noch keine Tipps abgegeben
+      </td>
+    </tr>
+  `;
+
+  const resultBadge = game.result_home !== null && game.result_away !== null
+    ? `<span class="game-result">✅ ${game.result_home} : ${game.result_away}</span>`
+    : `<span class="game-no-result">Kein Ergebnis eingetragen</span>`;
+
+  document.getElementById("app").innerHTML = `
+    <div class="top-bar">
+      <div>
+        <h2>Tippübersicht</h2>
+        <p style="font-size:13px; color:#555;">👤 ${currentUser}</p>
+      </div>
+      <button onclick="loadGames()">⬅️ Zurück</button>
+    </div>
+
+    <div class="create-game-box">
+      <div class="game-title">
+        ${game.home_team} vs ${game.away_team}
+        ${resultBadge}
+      </div>
+      <p style="font-size:13px; color:#555; margin-top:4px;">
+        ${game.kickoff ? '📅 ' + game.kickoff : ''}
+      </p>
+    </div>
+
+    <div style="overflow-x: auto; margin-top:8px;">
+      <table class="tips-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Spiel</th>
+            ${tipHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
