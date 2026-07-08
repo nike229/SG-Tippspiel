@@ -1,0 +1,23 @@
+{
+  "name": "Tipprunde SG 26/27",
+  "short_name": "SG Tippspiel",
+  "description": "Tippspiel für die SG SV Kleinochsenfurt / TSV Frickenhausen",
+  "start_url": "/SG-Tippspiel/",
+  "scope": "/SG-Tippspiel/",
+  "display": "standalone",
+  "background_color": "#f4f4f4",
+  "theme_color": "#1a73e8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
