@@ -89,16 +89,22 @@ tips.forEach(t => {
     <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
   `;
 
-  if (isAdmin) {
-    html += `
-      <h3>➕ Spiel erstellen</h3>
-      <input id="home" placeholder="Heimteam">
-      <input id="away" placeholder="Auswärtsteam">
-      <input id="kickoff" placeholder="Kickoff (YYYY-MM-DD)">
-      <button onclick="createGame()">Erstellen</button>
-      <hr>
-    `;
-  }
+if (isAdmin) {
+  html += `
+    <h3>➕ Spiel erstellen</h3>
+    <input id="home" placeholder="Heimteam">
+    <input id="away" placeholder="Auswärtsteam">
+    <input id="kickoff" placeholder="Kickoff (YYYY-MM-DD)">
+    <button onclick="createGame()">Erstellen</button>
+    <hr>
+
+    <h3>⚙️ Einstellungen – Passwortverwaltung</h3>
+    <div id="user-list">
+      <p style="color:#999">Wird geladen...</p>
+    </div>
+    <hr>
+  `;
+}
 
   html += games.map(g => {
     const myTips = tipMap[g.id] || [];
@@ -139,6 +145,10 @@ tips.forEach(t => {
   }).join("");
 
   document.getElementById("app").innerHTML = html;
+
+  if (isAdmin) {
+  loadUserList();
+}
 }
 
 async function tip(gameId, btn) {
@@ -279,4 +289,55 @@ async function deleteTip(tipId) {
   }
 
   loadGames();
+}
+
+async function loadUserList() {
+  const res = await fetch(API + "/api/users", {
+    headers: { Authorization: "Bearer " + token }
+  });
+
+  const users = await res.json();
+
+  const html = users.map(u => `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px; border:1px solid #ddd;">
+      <span style="min-width:120px"><b>${u.username}</b></span>
+      <input 
+        type="password" 
+        id="pw-${u.id}" 
+        placeholder="Neues Passwort" 
+        style="width:150px"
+      >
+      <button onclick="resetPassword('${u.id}')">🔑 Zurücksetzen</button>
+    </div>
+  `).join("");
+
+  document.getElementById("user-list").innerHTML = html;
+}
+
+async function resetPassword(userId) {
+  const newPassword = document.getElementById("pw-" + userId).value;
+
+  if (!newPassword) {
+    alert("Bitte ein neues Passwort eingeben");
+    return;
+  }
+
+  const res = await fetch(API + "/api/users/" + userId + "/reset-password", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ newPassword })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Fehler beim Zurücksetzen");
+    return;
+  }
+
+  alert("✅ Passwort wurde zurückgesetzt");
+  document.getElementById("pw-" + userId).value = "";
 }
