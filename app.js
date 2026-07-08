@@ -85,8 +85,17 @@ tips.forEach(t => {
 });
 
   let html = `
-    <h2>Spiele</h2>
-    <p>👤 Eingeloggt als: <b>${currentUser}</b></p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div>
+        <h2 style="margin:0">Spiele</h2>
+        <p style="margin:4px 0 0 0">👤 Eingeloggt als: <b>${currentUser}</b></p>
+      </div>
+      <button 
+        onclick="logout()" 
+        style="background:#f44336; color:white; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-size:14px;">
+        🚪 Logout
+      </button>
+    </div>
   `;
 
 if (isAdmin) {
@@ -379,4 +388,12 @@ async function toggleLock(gameId, currentlyLocked) {
   }
 
   loadGames();
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  token = null;
+  isAdmin = false;
+  currentUser = null;
+  renderLogin();
 }
