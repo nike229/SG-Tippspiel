@@ -389,6 +389,40 @@ app.put("/api/users/:id/reset-password", async (req, res) => {
   res.json({ success: true });
 });
 
+/* =========================
+   SPIEL SPERREN/ENTSPERREN (ADMIN)
+========================= */
+app.put("/api/games/:id/lock", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  let user;
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  if (user.role !== "admin") {
+    return res.status(403).json({ error: "Nur Admin erlaubt" });
+  }
+
+  const { id } = req.params;
+  const { locked } = req.body;
+
+  const { error } = await supabase
+    .from("games")
+    .update({ locked })
+    .eq("id", id);
+
+  if (error) return res.status(400).json(error);
+
+  res.json({ success: true });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
