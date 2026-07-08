@@ -515,6 +515,62 @@ app.delete("/api/games/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+/* =========================
+   TIPPÜBERSICHT PRO SPIEL (ADMIN)
+========================= */
+app.get("/api/games/:id/tips-overview", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  let user;
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  if (user.role !== "admin") {
+    return res.status(403).json({ error: "Nur Admin erlaubt" });
+  }
+
+  const { id } = req.params;
+
+  const { data: game, error: gameError } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (gameError || !game) return res.status(400).json({ error: "Spiel nicht gefunden" });
+
+  const { data: tips, error: tipsError } = await supabase
+    .from("tips")
+    .select("*, users(username)")
+    .eq("game_id", id)
+    .order("user_id", { ascending: true });
+
+  if (tipsError) return res.status(400).json(tipsError);
+
+  const { data: settings } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "maxTipsPerGame")
+    .single();
+
+  const maxTips = settings ? Number(settings.value) : 1;
+
+  // Tipps gruppiert nach User
+  const grouped = {};
+  tips.forEach(t => {
+    const username = t.users?.username || "Unbekannt";
+    if (!grouped[username]) grouped[username] = [];
+    grouped[username].push({ tip_home: t.tip_home, tip_away: t.tip_away });
+  });
+
+  res.json({ game, grouped, maxTips });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
