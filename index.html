@@ -3,15 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SG Tippspiel">
   <title>Tipprunde SG 26/27</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
-
   <h1>⚽ Tipprunde SG 26/27</h1>
-
   <div id="app"></div>
-
   <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/SG-Tippspiel/sw.js")
+          .then(reg => console.log("Service Worker registriert:", reg.scope))
+          .catch(err => console.log("Service Worker Fehler:", err));
+      });
+    }
+  </script>
 </body>
 </html>
