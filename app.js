@@ -9,7 +9,7 @@ let currentUser = null;
 function decodeUser(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    isAdmin = payload.username === "Admin";
+    isAdmin = payload.role === "admin";
     currentUser = payload.username;
   } catch (e) {
     isAdmin = false;
