@@ -328,3 +328,39 @@ button:active {
   margin-bottom: 16px;
   text-align: left;
 }
+
+/* =========================
+   TIPPÜBERSICHT TABELLE
+========================= */
+.tips-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.tips-table th {
+  background: #1a73e8;
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.tips-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.tips-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tips-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
