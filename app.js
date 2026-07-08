@@ -173,12 +173,15 @@ html += games.map(g => {
         ${myTips.length ? `
           <div class="tips-list">
             ✔ Deine Tipps:<br>
-            ${myTips.map(t => `
-              <div>
-                - ${t.tip_home} : ${t.tip_away}
-                <button onclick="deleteTip('${t.id}')">🗑️</button>
-              </div>
-            `).join("")}
+              ${myTips.map(t => `
+                <div>
+                  - ${t.tip_home} : ${t.tip_away}
+                  ${!g.locked && !g.evaluated
+                    ? `<button onclick="deleteTip('${t.id}')">🗑️</button>`
+                    : ''
+                  }
+                </div>
+              `).join("")}
           </div>
         ` : '<div style="color:#999; font-size:14px; margin-top:8px;">Noch kein Tipp abgegeben</div>'}
       `}
