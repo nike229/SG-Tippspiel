@@ -53,7 +53,8 @@ app.post("/api/auth/login", async (req, res) => {
   if (username === ADMIN_USER && password === ADMIN_PASS) {
     const token = jwt.sign(
       { id: "admin", role: "admin", username: "Admin" },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }   // Token läuft nicht sofort ab
     );
     return res.json({ token });
   }
