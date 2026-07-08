@@ -55,8 +55,8 @@ async function register() {
 function renderLogin() {
   document.getElementById("app").innerHTML = `
     <h2>Login</h2>
-    <input id="user" placeholder="Username"><br>
-    <input id="pass" type="password" placeholder="Password"><br>
+    <input id="user" placeholder="Username" autocomplete="username"><br>
+    <input id="pass" type="password" placeholder="Password" autocomplete="current-password"><br>
     <button onclick="login()">Login</button>
     <button onclick="register()">Registrieren</button>
   `;
