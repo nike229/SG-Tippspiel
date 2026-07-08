@@ -349,6 +349,46 @@ app.delete("/api/tips/:tipId", async (req, res) => {
   res.json({ success: true });
 });
 
+/* =========================
+   PASSWORT ZURÜCKSETZEN (ADMIN)
+========================= */
+app.put("/api/users/:id/reset-password", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  let user;
+  try {
+    user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  if (user.role !== "admin") {
+    return res.status(403).json({ error: "Nur Admin erlaubt" });
+  }
+
+  const { id } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 4) {
+    return res.status(400).json({ error: "Passwort zu kurz (min. 4 Zeichen)" });
+  }
+
+  const hash = await bcrypt.hash(newPassword, 10);
+
+  const { error } = await supabase
+    .from("users")
+    .update({ password_hash: hash })
+    .eq("id", id);
+
+  if (error) return res.status(400).json(error);
+
+  res.json({ success: true });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
