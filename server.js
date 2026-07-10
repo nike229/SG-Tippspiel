@@ -30,10 +30,30 @@ app.get("/", (req, res) => {
 app.post("/api/auth/register", async (req, res) => {
   const { username, password } = req.body;
 
-  const hash = await bcrypt.hash(password, 10);
+  // 1. Leere Felder prüfen
+  if (!username || username.trim() === "") {
+    return res.status(400).json({ error: "Bitte einen Benutzernamen eingeben" });
+  }
+
+  if (!password || password.trim() === "") {
+    return res.status(400).json({ error: "Bitte ein Passwort eingeben" });
+  }
+
+  // 2. Doppelten Username prüfen
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .ilike("username", username.trim())
+    .single();
+
+  if (existing) {
+    return res.status(400).json({ error: `Benutzername "${username}" ist bereits vergeben` });
+  }
+
+  const hash = await bcrypt.hash(password.trim(), 10);
 
   const { error } = await supabase.from("users").insert({
-    username,
+    username: username.trim(),
     password_hash: hash,
     role: "player"
   });
