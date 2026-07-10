@@ -40,16 +40,34 @@ async function login() {
 }
 
 async function register() {
-  const username = document.getElementById("user").value;
-  const password = document.getElementById("pass").value;
+  const username = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
 
-  await fetch(API + "/api/auth/register", {
+  // Clientseitige Prüfung (schnelles Feedback ohne Server-Roundtrip)
+  if (!username) {
+    alert("Bitte einen Benutzernamen eingeben");
+    return;
+  }
+
+  if (!password) {
+    alert("Bitte ein Passwort eingeben");
+    return;
+  }
+
+  const res = await fetch(API + "/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
   });
 
-  alert("Registriert! Jetzt einloggen.");
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Registrierung fehlgeschlagen");
+    return;
+  }
+
+  alert("✅ Registriert! Jetzt einloggen.");
 }
 
 function renderLogin() {
